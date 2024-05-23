@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Scatter Plot</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        svg {
+            display: block;
+            background-color: white;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <svg width="800" height="400"></svg>
+    <script>
+        async function fetchWeatherData() {
+            const url = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.405&hourly=temperature_2m";
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.hourly.time.map((time, index) => ({
+                time: new Date(time),
+                temperature: data.hourly.temperature_2m[index]
+            }));
+        }
+
+        async function drawChart() {
+            const data = await fetchWeatherData();
+            const svg = d3.select("svg");
+            const margin = { top: 20, right: 30, bottom: 30, left: 40 };
+            const width = svg.attr("width") - margin.left - margin.right;
+            const height = svg.attr("height") - margin.top - margin.bottom;
+            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+            const xScale = d3.scaleTime()
+                .domain(d3.extent(data, d => d.time))
+                .range([0, width]);
+
+            const yScale = d3.scaleLinear()
+                .domain([d3.min(data, d => d.temperature), d3.max(data, d => d.temperature)])
+                .range([height, 0]);
+
+            const xAxis = d3.axisBottom(xScale).ticks(8);
+            const yAxis = d3.axisLeft(yScale).ticks(8);
+
+            g.append("g")
+                .attr("transform", `translate(0,${height})`)
+                .call(xAxis);
+
+            g.append("g")
+                .call(yAxis);
+
+            g.selectAll(".dot")
+                .data(data)
+                .enter().append("circle")
+                .attr("class", "dot")
+                .attr("cx", d => xScale(d.time))
+                .attr("cy", d => yScale(d.temperature))
+                .attr("r", 5)
+                .style("fill", "#4285F4");
+        }
+
+        drawChart();
+    </script>
+</body>
+</html>
