@@ -2,76 +2,120 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Weather Scatter Plot</title>
+    <title>Stock Data Scatter Chart</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
-        svg {
-            display: block;
-            background-color: white;
-            border: 1px solid #ccc;
-        }
-    </style>
 </head>
 <body>
-    <svg width="800" height="400"></svg>
+    <select id="stockSelector"></select>
+    <input type="date" id="datePicker">
+    <div id="chart"></div>
+
     <script>
-        async function fetchWeatherData() {
-            const url = "https://api.open-meteo.com/v1/forecast?latitude=52.52&longitude=13.405&hourly=temperature_2m";
-            const response = await fetch(url);
-            const data = await response.json();
-            return data.hourly.time.map((time, index) => ({
-                time: new Date(time),
-                temperature: data.hourly.temperature_2m[index]
-            }));
+        let stockDataGlobal; // Global variable to hold the full dataset
+
+        // Fetch top movers (gainers, losers, most traded)
+        fetch('https://www.alphavantage.co/query?function=TOP_GAINERS_LOSERS&apikey=0CA9DQDO9OITGW9U') // Update URL as needed
+        .then(response => response.json())
+        .then(data => {
+            const selector = document.getElementById('stockSelector');
+            data.top_gainers.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock.ticker;
+                option.text = `${stock.ticker} (${stock.price}) - Change: ${stock.change_percentage}`;
+                selector.appendChild(option);
+            });
+
+            // Trigger initial chart draw with the first top gainer
+            if (selector.value) {
+                updateChart(selector.value);
+            }
+        });
+
+        document.getElementById('stockSelector').addEventListener('change', function() {
+            if (document.getElementById('datePicker').value) {
+                updateChart(this.value, document.getElementById('datePicker').value);
+            }
+        });
+
+        document.getElementById('datePicker').addEventListener('change', function() {
+            if (document.getElementById('stockSelector').value) {
+                updateChart(document.getElementById('stockSelector').value, this.value);
+            }
+        });
+
+        function updateChart(stockSymbol, selectedDate) {
+            const formattedDate = selectedDate.replace(/-/g, ''); // Format date as YYYYMMDD for API
+            fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=15min&outputsize=full&apikey=0CA9DQDO9OITGW9U&slice=year1month1`)
+            .then(response => response.json())
+            .then(data => {
+                // Filter data to include only entries from the selected date
+                stockDataGlobal = Object.entries(data["Time Series (15min)"])
+                .filter(([date]) => date.startsWith(selectedDate))
+                .map(([date, value]) => ({
+                    date: date,
+                    close: +value["4. close"]
+                }));
+
+                drawChart(stockDataGlobal);
+            });
         }
 
-        async function drawChart() {
-            const data = await fetchWeatherData();
-            const svg = d3.select("svg");
-            const margin = { top: 20, right: 30, bottom: 30, left: 40 };
-            const width = svg.attr("width") - margin.left - margin.right;
-            const height = svg.attr("height") - margin.top - margin.bottom;
-            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+        function drawChart(stockData) {
+            // Clear existing SVG
+            d3.select("#chart").selectAll("svg").remove();
 
-            const xScale = d3.scaleTime()
-                .domain(d3.extent(data, d => d.time))
-                .range([0, width]);
+            const margin = {top: 20, right: 30, bottom: 40, left: 50},
+                width = 960 - margin.left - margin.right,
+                height = 500 - margin.top - margin.bottom;
 
-            const yScale = d3.scaleLinear()
-                .domain([d3.min(data, d => d.temperature), d3.max(data, d => d.temperature)])
-                .range([height, 0]);
+            const svg = d3.select("#chart").append("svg")
+                .attr("width", width + margin.left + margin.right)
+                .attr("height", height + margin.top + margin.bottom)
+                .append("g")
+                .attr("transform",
+                      "translate(" + margin.left + "," + margin.top + ")");
 
-            const xAxis = d3.axisBottom(xScale).ticks(8);
-            const yAxis = d3.axisLeft(yScale).ticks(8);
+            // Add X axis
+            const x = d3.scaleTime()
+                .domain(d3.extent(stockData, d => new Date(d.date)))
+                .range([ 0, width ]);
+            svg.append("g")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x));
 
-            g.append("g")
-                .attr("transform", `translate(0,${height})`)
-                .call(xAxis);
+            // Add Y axis
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(stockData, d => d.close)])
+                .range([ height, 0]);
+            svg.append("g")
+                .call(d3.axisLeft(y));
 
-            g.append("g")
-                .call(yAxis);
+            // Add gridlines for X axis
+            svg.append("g")
+                .attr("class", "grid")
+                .attr("transform", "translate(0," + height + ")")
+                .call(d3.axisBottom(x)
+                    .tickSize(-height)
+                    .tickFormat(""));
 
-            g.selectAll(".dot")
-                .data(data)
-                .enter().append("circle")
-                .attr("class", "dot")
-                .attr("cx", d => xScale(d.time))
-                .attr("cy", d => yScale(d.temperature))
-                .attr("r", 5)
-                .style("fill", "#4285F4");
+            // Add gridlines for Y axis
+            svg.append("g")
+                .attr("class", "grid")
+                .call(d3.axisLeft(y)
+                    .tickSize(-width)
+                    .tickFormat(""));
+
+            // Add dots
+            svg.append('g')
+                .selectAll("dot")
+                .data(stockData)
+                .enter()
+                .append("circle")
+                  .attr("cx", d => x(new Date(d.date)))
+                  .attr("cy", d => y(d.close))
+                  .attr("r", 5)
+                  .style("fill", "#69b3a2");
         }
-
-        drawChart();
     </script>
 </body>
 </html>
