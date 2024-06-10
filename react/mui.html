@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stock Visualizer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+    <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@emotion/react/umd/emotion-react.umd.min.js"></script>
+    <script src="https://unpkg.com/@emotion/styled/umd/emotion-styled.umd.min.js"></script>
+    <script src="https://unpkg.com/@mui/material/umd/material-ui.development.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: Roboto, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .header {
+            background: #1218b0;  /* Updated color */
+            padding: 10px 20px;
+            color: white;
+            text-align: center;
+            font-size: 24px;
+        }
+        .content {
+            display: flex;
+            flex-grow: 1;
+        }
+        .sidebar {
+            flex-basis: 300px;
+            padding: 20px;
+            background: #1218b0;  /* Updated color */
+            color: white;  /* Ensure text is visible on the new background */
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        #chartContainer {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        svg {
+            width: 100%;
+            max-height: 500px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">Stock Market Data Visualizer</div>
+    <div class="content">
+        <div class="sidebar">
+            <div id="root"></div>
+        </div>
+        <div id="chartContainer"></div>
+    </div>
+    <script type="text/babel">
+        const {
+            CssBaseline, Box, Card, CardContent, Typography, TextField, MenuItem
+        } = MaterialUI;
+
+        function App() {
+            const [stocks, setStocks] = React.useState([]);
+            const [selectedStock, setSelectedStock] = React.useState('');
+            const [date, setDate] = React.useState('');
+
+            React.useEffect(() => {
+                fetch('https://www.alphavantage.co/query?function=TOP_GAINERS_LOSERS&apikey=YOUR_API_KEY') // Replace YOUR_API_KEY
+                .then(response => response.json())
+                .then(data => {
+                    if (data.Information) { // Handle API limit reached
+                        alert(data.Information);
+                    } else {
+                        setStocks(data['top_gainers']);
+                        setSelectedStock(data['top_gainers'][0]?.ticker);
+                    }
+                })
+                .catch(error => console.error('Failed to fetch stock data:', error));
+            }, []);
+
+            React.useEffect(() => {
+                if (!selectedStock || !date) return;
+                fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${selectedStock}&interval=15min&outputsize=full&apikey=YOUR_API_KEY`) // Replace YOUR_API_KEY
+                .then(response => response.json())
+                .then(data => {
+                    if (data.Information) { // Handle API limit reached
+                        alert(data.Information);
+                    } else {
+                        const stockData = Object.entries(data["Time Series (15min)"])
+                            .filter(([key]) => key.startsWith(date))
+                            .map(([date, value]) => ({
+                                date: date,
+                                close: +value["4. close"]
+                            }));
+                        drawChart(stockData);
+                    }
+                })
+                .catch(error => console.error('Failed to update chart:', error));
+            }, [selectedStock, date]);
+
+            function drawChart(stockData) {
+                let svg = d3.select("#chartContainer").select("svg");
+
+                if (svg.empty()) {
+                    svg = d3.select("#chartContainer").append("svg")
+                        .attr("width", 960)
+                        .attr("height", 500);
+                } else {
+                    svg.selectAll("*").remove(); // Clear the existing SVG content before redrawing
+                }
+
+                const margin = { top: 20, right: 20, bottom: 30, left: 50 },
+                    width = +svg.attr("width") - margin.left - margin.right,
+                    height = +svg.attr("height") - margin.top - margin.bottom,
+                    g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+                const x = d3.scaleTime()
+                    .rangeRound([0, width])
+                    .domain(d3.extent(stockData, d => new Date(d.date)));
+
+                const y = d3.scaleLinear()
+                    .rangeRound([height, 0])
+                    .domain([0, d3.max(stockData, d => d.close)]);
+
+                g.append("g")
+                    .attr("transform", `translate(0,${height})`)
+                    .call(d3.axisBottom(x));
+
+                g.append("g")
+                    .call(d3.axisLeft(y))
+                    .append("text")
+                    .attr("fill", "#fff")  /* Changed text color to white for visibility */
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 6)
+                    .attr("dy", "0.71em")
+                    .attr("text-anchor", "end")
+                    .text("Price ($)");
+
+                g.selectAll(".dot")
+                    .data(stockData)
+                    .enter().append("circle")
+                    .attr("class", "dot")
+                    .attr("cx", d => x(new Date(d.date)))
+                    .attr("cy", d => y(d.close))
+                    .attr("r", 5)
+                    .style("fill", "#ff7300");
+            }
+
+            return (
+                <React.Fragment>
+                    <CssBaseline />
+                    <Box>
+                        <Card style={{ background: 'rgba(255, 255, 255, 0.8)' }}>  
+                            <CardContent>
+                                <Typography variant="h5" component="h2" style={{ color: '#1218b0' }}>  
+                                    Select Parameters
+                                </Typography>
+                                <TextField
+                                    select
+                                    label="Select Stock"
+                                    value={selectedStock}
+                                    onChange={e => setSelectedStock(e.target.value)}
+                                    fullWidth
+                                    margin="normal"
+                                >
+                                    {stocks.map(stock => (
+                                        <MenuItem key={stock.ticker} value={stock.ticker}>
+                                            {stock.ticker}
+                                        </MenuItem>
+                                    ))}
+                                </TextField>
+                                <TextField
+                                    type="date"
+                                    label="Select Date"
+                                    value={date}
+                                    onChange={e => setDate(e.target.value)}
+                                    fullWidth
+                                    margin="normal"
+                                />
+                            </CardContent>
+                        </Card>
+                    </Box>
+                </React.Fragment>
+            );
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
