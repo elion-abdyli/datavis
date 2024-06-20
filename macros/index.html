@@ -36,6 +36,9 @@
     <h2>Results</h2>
     <p id="results"></p>
 
+    <h2>Total Calories</h2>
+    <p id="calories"></p>
+
     <script>
         function calculateMacros() {
             // Macro goals input
@@ -46,14 +49,24 @@
             // Nutrient content per 100g
             const chickenProtein = 31; // g of protein per 100g of chicken breast
             const chickenFat = 3.6; // g of fat per 100g of chicken breast
+            const chickenCalories = 165; // calories per 100g of chicken breast
+
             const broccoliProtein = 2.8; // g of protein per 100g of broccoli
             const broccoliCarbs = 6.6; // g of carbs per 100g of broccoli
+            const broccoliCalories = 34; // calories per 100g of broccoli
+
             const riceCarbs = 28; // g of carbs per 100g of cooked rice
+            const riceCalories = 130; // calories per 100g of cooked rice
 
             // Calculations
             const chickenAmount = (proteinGoal / chickenProtein) * 100;
             const broccoliAmount = (carbGoal / broccoliCarbs) * 100;
             const riceAmount = (carbGoal / riceCarbs) * 100;
+
+            // Calorie calculations
+            const totalCalories = (chickenAmount * chickenCalories / 100) +
+                                  (broccoliAmount * broccoliCalories / 100) +
+                                  (riceAmount * riceCalories / 100);
 
             // Display results
             const results = `
@@ -63,6 +76,7 @@
                 ${riceAmount.toFixed(2)} grams of cooked rice.
             `;
             document.getElementById('results').innerHTML = results;
+            document.getElementById('calories').innerHTML = `Total Calories: ${totalCalories.toFixed(2)} kcal`;
         }
 
         // Add event listeners to inputs to recalculate on input
