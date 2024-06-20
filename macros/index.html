@@ -22,6 +22,7 @@
             max-width: 400px;
             width: 100%;
             box-sizing: border-box;
+            text-align: center;
         }
         form {
             margin-bottom: 20px;
@@ -107,9 +108,9 @@
             // Display results
             const results = `
                 To meet your macro goals, you need to eat approximately:<br>
-                ${chickenAmount.toFixed(2)} grams of chicken breast,<br>
-                ${broccoliAmount.toFixed(2)} grams of broccoli, and<br>
-                ${riceAmount.toFixed(2)} grams of cooked rice.
+                🍗 ${chickenAmount.toFixed(2)} grams of chicken breast,<br>
+                🥦 ${broccoliAmount.toFixed(2)} grams of broccoli, and<br>
+                🍚 ${riceAmount.toFixed(2)} grams of cooked rice.
             `;
             document.getElementById('results').innerHTML = results;
             document.getElementById('calories').innerHTML = `Total Calories: ${totalCalories.toFixed(2)} kcal`;
