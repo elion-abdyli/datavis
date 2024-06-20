@@ -15,22 +15,35 @@
             display: block;
             margin-bottom: 5px;
         }
-        input {
-            margin-bottom: 10px;
+        input[type="number"] {
+            width: 50px;
+            margin-left: 10px;
+        }
+        .slider-container {
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
     <h1>Macro Goals Calculator</h1>
     <form id="macro-form">
-        <label for="protein-goal">Protein Goal (g):</label>
-        <input type="number" id="protein-goal" value="150" required><br>
-
-        <label for="carb-goal">Carbohydrate Goal (g):</label>
-        <input type="number" id="carb-goal" value="200" required><br>
-
-        <label for="fat-goal">Fat Goal (g):</label>
-        <input type="number" id="fat-goal" value="50" required><br>
+        <div class="slider-container">
+            <label for="protein-goal">Protein Goal (g):</label>
+            <input type="range" id="protein-goal" min="0" max="300" value="150" oninput="updateValue('protein-goal', 'protein-value')">
+            <input type="number" id="protein-value" value="150" min="0" max="300" oninput="updateSlider('protein-goal', 'protein-value')">
+        </div>
+        
+        <div class="slider-container">
+            <label for="carb-goal">Carbohydrate Goal (g):</label>
+            <input type="range" id="carb-goal" min="0" max="500" value="200" oninput="updateValue('carb-goal', 'carb-value')">
+            <input type="number" id="carb-value" value="200" min="0" max="500" oninput="updateSlider('carb-goal', 'carb-value')">
+        </div>
+        
+        <div class="slider-container">
+            <label for="fat-goal">Fat Goal (g):</label>
+            <input type="range" id="fat-goal" min="0" max="100" value="50" oninput="updateValue('fat-goal', 'fat-value')">
+            <input type="number" id="fat-value" value="50" min="0" max="100" oninput="updateSlider('fat-goal', 'fat-value')">
+        </div>
     </form>
 
     <h2>Results</h2>
@@ -79,10 +92,21 @@
             document.getElementById('calories').innerHTML = `Total Calories: ${totalCalories.toFixed(2)} kcal`;
         }
 
-        // Add event listeners to inputs to recalculate on input
-        document.getElementById('protein-goal').addEventListener('input', calculateMacros);
-        document.getElementById('carb-goal').addEventListener('input', calculateMacros);
-        document.getElementById('fat-goal').addEventListener('input', calculateMacros);
+        // Update number input when slider changes
+        function updateValue(sliderId, numberId) {
+            const slider = document.getElementById(sliderId);
+            const number = document.getElementById(numberId);
+            number.value = slider.value;
+            calculateMacros();
+        }
+
+        // Update slider when number input changes
+        function updateSlider(sliderId, numberId) {
+            const slider = document.getElementById(sliderId);
+            const number = document.getElementById(numberId);
+            slider.value = number.value;
+            calculateMacros();
+        }
 
         // Initial calculation
         calculateMacros();
