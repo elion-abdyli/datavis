@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Macro Goals Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Macro Goals Calculator</h1>
+    <form id="macro-form">
+        <label for="protein-goal">Protein Goal (g):</label>
+        <input type="number" id="protein-goal" value="150" required><br>
+
+        <label for="carb-goal">Carbohydrate Goal (g):</label>
+        <input type="number" id="carb-goal" value="200" required><br>
+
+        <label for="fat-goal">Fat Goal (g):</label>
+        <input type="number" id="fat-goal" value="50" required><br>
+    </form>
+
+    <h2>Results</h2>
+    <p id="results"></p>
+
+    <script>
+        function calculateMacros() {
+            // Macro goals input
+            const proteinGoal = parseFloat(document.getElementById('protein-goal').value);
+            const carbGoal = parseFloat(document.getElementById('carb-goal').value);
+            const fatGoal = parseFloat(document.getElementById('fat-goal').value);
+
+            // Nutrient content per 100g
+            const chickenProtein = 31; // g of protein per 100g of chicken breast
+            const chickenFat = 3.6; // g of fat per 100g of chicken breast
+            const broccoliProtein = 2.8; // g of protein per 100g of broccoli
+            const broccoliCarbs = 6.6; // g of carbs per 100g of broccoli
+            const riceCarbs = 28; // g of carbs per 100g of cooked rice
+
+            // Calculations
+            const chickenAmount = (proteinGoal / chickenProtein) * 100;
+            const broccoliAmount = (carbGoal / broccoliCarbs) * 100;
+            const riceAmount = (carbGoal / riceCarbs) * 100;
+
+            // Display results
+            const results = `
+                To meet your macro goals, you need to eat approximately:<br>
+                ${chickenAmount.toFixed(2)} grams of chicken breast,<br>
+                ${broccoliAmount.toFixed(2)} grams of broccoli, and<br>
+                ${riceAmount.toFixed(2)} grams of cooked rice.
+            `;
+            document.getElementById('results').innerHTML = results;
+        }
+
+        // Add event listeners to inputs to recalculate on input
+        document.getElementById('protein-goal').addEventListener('input', calculateMacros);
+        document.getElementById('carb-goal').addEventListener('input', calculateMacros);
+        document.getElementById('fat-goal').addEventListener('input', calculateMacros);
+
+        // Initial calculation
+        calculateMacros();
+    </script>
+</body>
+</html>
