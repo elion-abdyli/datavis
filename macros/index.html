@@ -7,6 +7,21 @@
     <style>
         body {
             font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            box-sizing: border-box;
         }
         form {
             margin-bottom: 20px;
@@ -25,38 +40,40 @@
     </style>
 </head>
 <body>
-    <h1>Macro Goals Calculator</h1>
-    <form id="macro-form">
-        <div class="slider-container">
-            <label for="protein-goal">Protein Goal (g):</label>
-            <input type="range" id="protein-goal" min="0" max="300" value="150" oninput="updateValue('protein-goal', 'protein-value')">
-            <input type="number" id="protein-value" value="150" min="0" max="300" oninput="updateSlider('protein-goal', 'protein-value')">
-        </div>
-        
-        <div class="slider-container">
-            <label for="carb-goal">Carbohydrate Goal (g):</label>
-            <input type="range" id="carb-goal" min="0" max="500" value="200" oninput="updateValue('carb-goal', 'carb-value')">
-            <input type="number" id="carb-value" value="200" min="0" max="500" oninput="updateSlider('carb-goal', 'carb-value')">
-        </div>
-        
-        <div class="slider-container">
-            <label for="fat-goal">Fat Goal (g):</label>
-            <input type="range" id="fat-goal" min="0" max="100" value="50" oninput="updateValue('fat-goal', 'fat-value')">
-            <input type="number" id="fat-value" value="50" min="0" max="100" oninput="updateSlider('fat-goal', 'fat-value')">
-        </div>
-        
-        <div class="slider-container">
-            <label for="calories-goal">Calories Goal (kcal):</label>
-            <input type="range" id="calories-goal" min="0" max="5000" value="2500" oninput="updateValue('calories-goal', 'calories-value'); updateCarbsToMatchCalories()">
-            <input type="number" id="calories-value" value="2500" min="0" max="5000" oninput="updateSlider('calories-goal', 'calories-value'); updateCarbsToMatchCalories()">
-        </div>
-    </form>
+    <div class="container">
+        <h1>Macro Goals Calculator</h1>
+        <form id="macro-form">
+            <div class="slider-container">
+                <label for="protein-goal">Protein Goal (g):</label>
+                <input type="range" id="protein-goal" min="0" max="300" value="150" oninput="updateValue('protein-goal', 'protein-value')">
+                <input type="number" id="protein-value" value="150" min="0" max="300" oninput="updateSlider('protein-goal', 'protein-value')">
+            </div>
+            
+            <div class="slider-container">
+                <label for="carb-goal">Carbohydrate Goal (g):</label>
+                <input type="range" id="carb-goal" min="0" max="500" value="200" oninput="updateValue('carb-goal', 'carb-value')">
+                <input type="number" id="carb-value" value="200" min="0" max="500" oninput="updateSlider('carb-goal', 'carb-value')">
+            </div>
+            
+            <div class="slider-container">
+                <label for="fat-goal">Fat Goal (g):</label>
+                <input type="range" id="fat-goal" min="0" max="100" value="50" oninput="updateValue('fat-goal', 'fat-value')">
+                <input type="number" id="fat-value" value="50" min="0" max="100" oninput="updateSlider('fat-goal', 'fat-value')">
+            </div>
+            
+            <div class="slider-container">
+                <label for="calories-goal">Calories Goal (kcal):</label>
+                <input type="range" id="calories-goal" min="0" max="5000" value="2500" oninput="updateValue('calories-goal', 'calories-value'); updateCarbsToMatchCalories()">
+                <input type="number" id="calories-value" value="2500" min="0" max="5000" oninput="updateSlider('calories-goal', 'calories-value'); updateCarbsToMatchCalories()">
+            </div>
+        </form>
 
-    <h2>Results</h2>
-    <p id="results"></p>
+        <h2>Results</h2>
+        <p id="results"></p>
 
-    <h2>Total Calories</h2>
-    <p id="calories"></p>
+        <h2>Total Calories</h2>
+        <p id="calories"></p>
+    </div>
 
     <script>
         function calculateMacros() {
