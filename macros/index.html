@@ -67,6 +67,12 @@
                 <input type="range" id="calories-goal" min="0" max="5000" value="2500" oninput="updateValue('calories-goal', 'calories-value'); updateCarbsToMatchCalories()">
                 <input type="number" id="calories-value" value="2500" min="0" max="5000" oninput="updateSlider('calories-goal', 'calories-value'); updateCarbsToMatchCalories()">
             </div>
+            
+            <div class="slider-container">
+                <label for="meals">Number of Meals:</label>
+                <input type="range" id="meals" min="1" max="10" value="3" oninput="updateValue('meals', 'meals-value'); calculateMacros()">
+                <input type="number" id="meals-value" value="3" min="1" max="10" oninput="updateSlider('meals', 'meals-value'); calculateMacros()">
+            </div>
         </form>
 
         <h2>Results</h2>
@@ -82,6 +88,7 @@
             const proteinGoal = parseFloat(document.getElementById('protein-goal').value);
             let carbGoal = parseFloat(document.getElementById('carb-goal').value);
             const fatGoal = parseFloat(document.getElementById('fat-goal').value);
+            const meals = parseFloat(document.getElementById('meals').value);
 
             // Nutrient content per 100g
             const chickenProtein = 31; // g of protein per 100g of chicken breast
@@ -96,18 +103,18 @@
             const riceCalories = 130; // calories per 100g of cooked rice
 
             // Calculations
-            const chickenAmount = (proteinGoal / chickenProtein) * 100;
-            const broccoliAmount = (carbGoal / broccoliCarbs) * 100;
-            const riceAmount = (carbGoal / riceCarbs) * 100;
+            const chickenAmount = (proteinGoal / chickenProtein) * 100 / meals;
+            const broccoliAmount = (carbGoal / broccoliCarbs) * 100 / meals;
+            const riceAmount = (carbGoal / riceCarbs) * 100 / meals;
 
             // Calorie calculations
-            const totalCalories = (chickenAmount * chickenCalories / 100) +
-                                  (broccoliAmount * broccoliCalories / 100) +
-                                  (riceAmount * riceCalories / 100);
+            const totalCalories = (chickenAmount * chickenCalories / 100) * meals +
+                                  (broccoliAmount * broccoliCalories / 100) * meals +
+                                  (riceAmount * riceCalories / 100) * meals;
 
             // Display results
             const results = `
-                To meet your macro goals, you need to eat approximately:<br>
+                To meet your macro goals per meal, you need to eat approximately:<br>
                 🍗 ${chickenAmount.toFixed(2)} grams of chicken breast,<br>
                 🥦 ${broccoliAmount.toFixed(2)} grams of broccoli, and<br>
                 🍚 ${riceAmount.toFixed(2)} grams of cooked rice.
@@ -174,11 +181,13 @@
         document.getElementById('carb-goal').addEventListener('input', calculateMacros);
         document.getElementById('fat-goal').addEventListener('input', calculateMacros);
         document.getElementById('calories-goal').addEventListener('input', calculateMacros);
+        document.getElementById('meals').addEventListener('input', calculateMacros);
 
         document.getElementById('protein-value').addEventListener('input', calculateMacros);
         document.getElementById('carb-value').addEventListener('input', calculateMacros);
         document.getElementById('fat-value').addEventListener('input', calculateMacros);
         document.getElementById('calories-value').addEventListener('input', calculateMacros);
+        document.getElementById('meals-value').addEventListener('input', calculateMacros);
 
         // Initial calculation
         calculateMacros();
