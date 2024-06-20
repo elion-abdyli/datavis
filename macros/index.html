@@ -16,7 +16,7 @@
             margin-bottom: 5px;
         }
         input[type="number"] {
-            width: 50px;
+            width: 60px;
             margin-left: 10px;
         }
         .slider-container {
@@ -44,6 +44,12 @@
             <input type="range" id="fat-goal" min="0" max="100" value="50" oninput="updateValue('fat-goal', 'fat-value')">
             <input type="number" id="fat-value" value="50" min="0" max="100" oninput="updateSlider('fat-goal', 'fat-value')">
         </div>
+        
+        <div class="slider-container">
+            <label for="calories-goal">Calories Goal (kcal):</label>
+            <input type="range" id="calories-goal" min="0" max="5000" value="2500" oninput="updateValue('calories-goal', 'calories-value'); updateCarbsToMatchCalories()">
+            <input type="number" id="calories-value" value="2500" min="0" max="5000" oninput="updateSlider('calories-goal', 'calories-value'); updateCarbsToMatchCalories()">
+        </div>
     </form>
 
     <h2>Results</h2>
@@ -56,7 +62,7 @@
         function calculateMacros() {
             // Macro goals input
             const proteinGoal = parseFloat(document.getElementById('protein-goal').value);
-            const carbGoal = parseFloat(document.getElementById('carb-goal').value);
+            let carbGoal = parseFloat(document.getElementById('carb-goal').value);
             const fatGoal = parseFloat(document.getElementById('fat-goal').value);
 
             // Nutrient content per 100g
@@ -90,9 +96,15 @@
             `;
             document.getElementById('results').innerHTML = results;
             document.getElementById('calories').innerHTML = `Total Calories: ${totalCalories.toFixed(2)} kcal`;
+
+            // Update calorie goal field if it matches the current calculation
+            const caloriesGoal = parseFloat(document.getElementById('calories-goal').value);
+            if (Math.abs(caloriesGoal - totalCalories) < 1) {
+                document.getElementById('calories-goal').value = totalCalories.toFixed(2);
+                document.getElementById('calories-value').value = totalCalories.toFixed(2);
+            }
         }
 
-        // Update number input when slider changes
         function updateValue(sliderId, numberId) {
             const slider = document.getElementById(sliderId);
             const number = document.getElementById(numberId);
@@ -100,13 +112,55 @@
             calculateMacros();
         }
 
-        // Update slider when number input changes
         function updateSlider(sliderId, numberId) {
             const slider = document.getElementById(sliderId);
             const number = document.getElementById(numberId);
             slider.value = number.value;
             calculateMacros();
         }
+
+        function updateCarbsToMatchCalories() {
+            const caloriesGoal = parseFloat(document.getElementById('calories-goal').value);
+            const proteinGoal = parseFloat(document.getElementById('protein-goal').value);
+            const fatGoal = parseFloat(document.getElementById('fat-goal').value);
+
+            // Nutrient content per 100g
+            const chickenProtein = 31; // g of protein per 100g of chicken breast
+            const chickenFat = 3.6; // g of fat per 100g of chicken breast
+            const chickenCalories = 165; // calories per 100g of chicken breast
+
+            const broccoliProtein = 2.8; // g of protein per 100g of broccoli
+            const broccoliCarbs = 6.6; // g of carbs per 100g of broccoli
+            const broccoliCalories = 34; // calories per 100g of broccoli
+
+            const riceCarbs = 28; // g of carbs per 100g of cooked rice
+            const riceCalories = 130; // calories per 100g of cooked rice
+
+            // Calculate current calories excluding carbs
+            const chickenAmount = (proteinGoal / chickenProtein) * 100;
+            const chickenCaloriesTotal = (chickenAmount * chickenCalories) / 100;
+
+            const fatCaloriesTotal = fatGoal * 9;
+
+            const remainingCalories = caloriesGoal - chickenCaloriesTotal - fatCaloriesTotal;
+            const carbsNeeded = remainingCalories / 4; // 4 calories per gram of carbs
+
+            document.getElementById('carb-goal').value = carbsNeeded.toFixed(2);
+            document.getElementById('carb-value').value = carbsNeeded.toFixed(2);
+
+            calculateMacros();
+        }
+
+        // Add event listeners to inputs to recalculate on input
+        document.getElementById('protein-goal').addEventListener('input', calculateMacros);
+        document.getElementById('carb-goal').addEventListener('input', calculateMacros);
+        document.getElementById('fat-goal').addEventListener('input', calculateMacros);
+        document.getElementById('calories-goal').addEventListener('input', calculateMacros);
+
+        document.getElementById('protein-value').addEventListener('input', calculateMacros);
+        document.getElementById('carb-value').addEventListener('input', calculateMacros);
+        document.getElementById('fat-value').addEventListener('input', calculateMacros);
+        document.getElementById('calories-value').addEventListener('input', calculateMacros);
 
         // Initial calculation
         calculateMacros();
